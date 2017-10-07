@@ -10,6 +10,8 @@ import android.widget.Toast;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+//import de.wr.rxextensions.DataObject1;
+import de.wr.rxextensions.DataObject1;
 import de.wr.rxextensions.databinding.ActivityMainBinding;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -32,7 +34,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
+//        DataObject1$Builder
 //        Toast.makeText(this, sampleField.getValue(), Toast.LENGTH_LONG ).show();
+
+        de.wr.rxextensions.DataObject2 build = de.wr.rxextensions.DataObject2.builder().list(
+                Collections.singletonList(
+                        Collections.singletonList(DataObject1.builder().build())))
+                .build();
     }
 
     @Override

@@ -1,5 +1,7 @@
 package de.wr.rxextensions;
 
+import java.util.List;
+
 import de.wr.libsimpledataclasses.DataClassFactory;
 
 /**
@@ -8,6 +10,8 @@ import de.wr.libsimpledataclasses.DataClassFactory;
 @DataClassFactory
 public abstract class DataFactory {
 
-    abstract Object createDataObject1(String val1, int number, int number2);
+    abstract void createDataObject1(String val1, int number, int number2);
+
+    abstract void createDataObject2(String val1, List<List<de.wr.rxextensions.DataObject1>> list, int number1);
 
 }

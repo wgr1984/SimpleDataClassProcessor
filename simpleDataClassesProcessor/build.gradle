@@ -18,10 +18,11 @@ apply plugin: 'kotlin'
 dependencies {
     compile 'com.squareup:javapoet:1.8.0'
     compile 'com.github.javaparser:javaparser-core:3.2.12'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.5'
+    compile 'io.reactivex.rxjava2:rxkotlin:2.1.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile project(path: ':libSimpleDataClasses')
+    compileOnly "com.google.auto.value:auto-value:1.2"
 }
 
 sourceCompatibility = "1.8"
