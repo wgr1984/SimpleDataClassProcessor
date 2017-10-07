@@ -1,0 +1,41 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url 'https://github.com/Archinamon/GradleAspectJ-Android/raw/master' }
+    }
+    dependencies {
+        classpath 'com.github.Archinamon:GradleAspectJ-Android:3.0.2'
+        classpath 'com.github.javaparser:javaparser-core:3.2.12'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+dependencies {
+    compile 'com.squareup:javapoet:1.8.0'
+    compile 'com.github.javaparser:javaparser-core:3.2.12'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.5'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile project(path: ':libSimpleDataClasses')
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+repositories {
+    mavenCentral()
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
