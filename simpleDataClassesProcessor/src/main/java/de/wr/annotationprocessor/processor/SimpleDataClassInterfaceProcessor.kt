@@ -4,7 +4,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.TypeDeclaration
-import com.github.javaparser.ast.expr.ObjectCreationExpr
+import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.google.auto.value.AutoValue
@@ -25,6 +25,9 @@ import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
 import de.wr.libsimpledataclasses.DataClassFactory
+import de.wr.libsimpledataclasses.DefaultInt
+import de.wr.libsimpledataclasses.DefaultString
+import io.reactivex.annotations.Nullable
 import io.reactivex.rxkotlin.toObservable
 import java.io.*
 import java.util.*
@@ -138,6 +141,15 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         builderType.addAnnotation(AutoValue.Builder::class.java.canonicalName)
         type.addMember(builderType)
 
+        val builderMethod = type.addMethod("builder", AstModifier.STATIC)
+        builderMethod.setType("Builder")
+
+        val builderBody = BlockStmt()
+        val newOperation = ObjectCreationExpr()
+        newOperation.setType("AutoValue_$className.Builder")
+
+        var builderCall:Expression = newOperation
+
         creationMethod.parameters.forEach {
             val propertyName = it.simpleName.toString()
             // create a method
@@ -152,23 +164,42 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             propertySetter.addParameter(it.asType().toString(), propertyName)
             propertySetter.setType("Builder")
             propertySetter.removeBody()
+
+            //set defaults
+            // ints
+            it.getAnnotation(DefaultInt::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(IntegerLiteralExpr(it.value))
+                builderCall = defaultMethod
+            }
+            //Strings
+            it.getAnnotation(DefaultString::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(StringLiteralExpr(it.value))
+                builderCall = defaultMethod
+            }
+
+            //def values for primary types
+            if(it.asType().kind.isPrimitive && it.annotationMirrors.isEmpty()) {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(IntegerLiteralExpr())
+                builderCall = defaultMethod
+            }
+
+            //Nullables
+            it.annotationMirrors.find { it.toString().contains("Nullable") }?.let {
+                propertyGetter.addAnnotation(it.annotationType.toString())
+            }
         }
+
+        val returnStm = ReturnStmt(builderCall)
+        builderBody.addStatement(returnStm)
+        builderMethod.setBody(builderBody)
 
         // Add build method
         val propertySetter = builderType.addMethod("build", AstModifier.PUBLIC, AstModifier.ABSTRACT) // add parameters to method
         propertySetter.setType(className)
         propertySetter.removeBody()
-
-        val builderMethod = type.addMethod("builder", AstModifier.STATIC)
-        builderMethod.setType("Builder")
-
-        val builderBody = BlockStmt()
-        val newOperation = ObjectCreationExpr()
-        newOperation.setType("AutoValue_$className.Builder")
-        val returnStm = ReturnStmt(newOperation)
-        builderBody.addStatement(returnStm)
-
-        builderMethod.setBody(builderBody)
 
         writer?.write(cu.toString())
         writer?.flush()

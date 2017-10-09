@@ -7,6 +7,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import java.io.Console;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
                 Collections.singletonList(
                         Collections.singletonList(DataObject1.builder().build())))
                 .build();
+
+        System.out.println(build);
     }
 
     @Override
