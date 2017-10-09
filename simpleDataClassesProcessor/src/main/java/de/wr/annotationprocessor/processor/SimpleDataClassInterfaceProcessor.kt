@@ -1,13 +1,13 @@
 package de.wr.annotationprocessor.processor
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.body.BodyDeclaration
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.expr.ObjectCreationExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.google.auto.value.AutoValue
-
-import java.util.HashSet
-import java.util.Hashtable
 
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Filer
@@ -27,6 +27,8 @@ import javax.tools.Diagnostic
 import de.wr.libsimpledataclasses.DataClassFactory
 import io.reactivex.rxkotlin.toObservable
 import java.io.*
+import java.util.*
+import java.util.stream.Collectors
 
 import javax.lang.model.SourceVersion.latestSupported
 
@@ -134,6 +136,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
         val builderType = cuBuilder.addClass("Builder", AstModifier.ABSTRACT, AstModifier.STATIC)
         builderType.addAnnotation(AutoValue.Builder::class.java.canonicalName)
+        type.addMember(builderType)
 
         creationMethod.parameters.forEach {
             val propertyName = it.simpleName.toString()
@@ -167,13 +170,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
         builderMethod.setBody(builderBody)
 
-        val rawMainClass = cu.toString()
-        val mainClass = rawMainClass.substring(0, rawMainClass.length - 2) +
-                "\n" +
-                cuBuilder.toString().replace("import "+AutoValue.Builder::class.java.canonicalName, "" ) +
-                "\n}"
-
-        writer?.write(mainClass)
+        writer?.write(cu.toString())
         writer?.flush()
     }
 
