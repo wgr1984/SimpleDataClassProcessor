@@ -35,6 +35,7 @@ import java.util.stream.Collectors
 
 import javax.lang.model.SourceVersion.latestSupported
 import javax.lang.model.type.TypeKind
+import javax.xml.crypto.Data
 
 import com.github.javaparser.ast.Modifier as AstModifier
 
@@ -109,6 +110,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 //                javaFile.writeTo(writer)
 
                             generateDataClass(
+                                    element,
                                     writer,
                                     fileName,
                                     typeElement.qualifiedName.substring(0, typeElement.qualifiedName.length - typeElement.simpleName.length -1 ),
@@ -127,7 +129,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         return true
     }
 
-    private fun generateDataClass(writer: BufferedWriter?, className: String, packageName: String, creationMethod: ExecutableElement) {
+    private fun generateDataClass(factoryElement: TypeElement, writer: BufferedWriter?, className: String, packageName: String, creationMethod: ExecutableElement) {
         val cu = CompilationUnit();
         val cuBuilder = CompilationUnit();
         // set the package
@@ -200,8 +202,21 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             }
 
             //Nullables
-            it.annotationMirrors.find { it.toString().contains("Nullable") }?.let {
-                propertyGetter.addAnnotation(it.annotationType.toString())
+            if (!it.asType().kind.isPrimitive) {
+                val dataClassFactoryAnnotion = factoryElement.getAnnotation(DataClassFactory::class.java)
+                if (dataClassFactoryAnnotion.nullableAsDefault) {
+                    factoryElement.annotationMirrors.find { it.toString().contains("DataClassFactory") }?.let {
+                        val nullableClass: ExecutableElement? = it.elementValues.keys.find { key -> key.toString().contains("value") }
+                        val classValue = it.elementValues[nullableClass].toString()
+                        propertyGetter.addAnnotation(classValue.substring(0, classValue.lastIndexOf(".")));
+                    }
+                } else {
+                    creationMethod.annotationMirrors
+                            .union(it.annotationMirrors)
+                            .find { it.toString().contains("Nullable") }?.let {
+                        propertyGetter.addAnnotation(it.annotationType.toString())
+                    }
+                }
             }
         }
 
