@@ -229,6 +229,11 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         propertySetter.setType(className)
         propertySetter.removeBody()
 
+        // toBuilder
+        val toBuilder = type.addMethod("toBuilder", AstModifier.PUBLIC, AstModifier.ABSTRACT) // add parameters to method
+        toBuilder.setType("Builder")
+        toBuilder.removeBody()
+
         writer?.write(cu.toString())
         writer?.flush()
     }
