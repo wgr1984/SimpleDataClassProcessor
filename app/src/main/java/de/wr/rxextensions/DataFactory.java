@@ -21,4 +21,5 @@ public abstract class DataFactory {
 
     abstract void createDataObject2(@Nullable String val1, @Nullable List<List<de.wr.rxextensions.DataObject1>> list, double number1);
 
+    abstract void createDataObject3(byte by, double d, float f, int i, short s, boolean b, long l, Number number);
 }

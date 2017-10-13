@@ -34,6 +34,7 @@ import java.util.*
 import java.util.stream.Collectors
 
 import javax.lang.model.SourceVersion.latestSupported
+import javax.lang.model.type.TypeKind
 
 import com.github.javaparser.ast.Modifier as AstModifier
 
@@ -180,10 +181,22 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             }
 
             //def values for primary types
-            if(it.asType().kind.isPrimitive && it.annotationMirrors.isEmpty()) {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(IntegerLiteralExpr())
-                builderCall = defaultMethod
+            it.asType().kind.let { kind ->
+                if (kind.isPrimitive && it.annotationMirrors.isEmpty()) {
+                    val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                    when(kind) {
+                        TypeKind.INT -> "0"
+                        TypeKind.BOOLEAN -> "false"
+                        TypeKind.BYTE -> "(byte)0"
+                        TypeKind.SHORT -> "(short)0"
+                        TypeKind.LONG -> "0l"
+                        TypeKind.CHAR -> "0"
+                        TypeKind.FLOAT -> "0.0f"
+                        TypeKind.DOUBLE -> "0.0d"
+                        else -> ""
+                    }.takeIf { !it.isEmpty() }?.let (defaultMethod::addArgument)
+                    builderCall = defaultMethod
+                }
             }
 
             //Nullables
