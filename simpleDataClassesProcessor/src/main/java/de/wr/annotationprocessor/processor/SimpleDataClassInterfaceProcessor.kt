@@ -8,6 +8,7 @@ import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.google.auto.value.AutoValue
+import de.wr.libsimpledataclasses.*
 
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Filer
@@ -24,9 +25,6 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
-import de.wr.libsimpledataclasses.DataClassFactory
-import de.wr.libsimpledataclasses.DefaultInt
-import de.wr.libsimpledataclasses.DefaultString
 import io.reactivex.annotations.Nullable
 import io.reactivex.rxkotlin.toObservable
 import java.io.*
@@ -107,8 +105,6 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
                             val writer = BufferedWriter(source.openWriter())
 
-//                javaFile.writeTo(writer)
-
                             generateDataClass(
                                     element,
                                     writer,
@@ -175,6 +171,49 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                 defaultMethod.addArgument(IntegerLiteralExpr(it.value))
                 builderCall = defaultMethod
             }
+
+            // longs
+            it.getAnnotation(DefaultLong::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(LongLiteralExpr(it.value))
+                builderCall = defaultMethod
+            }
+
+            // short
+            it.getAnnotation(DefaultShort::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument("(short)"+it.value.toString())
+                builderCall = defaultMethod
+            }
+
+            // Byte
+            it.getAnnotation(DefaultByte::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument("(byte)"+it.value.toString())
+                builderCall = defaultMethod
+            }
+
+            // Boolean
+            it.getAnnotation(DefaultBool::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(BooleanLiteralExpr(it.value))
+                builderCall = defaultMethod
+            }
+
+            // Double
+            it.getAnnotation(DefaultDouble::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(DoubleLiteralExpr(it.value))
+                builderCall = defaultMethod
+            }
+
+            // Float
+            it.getAnnotation(DefaultFloat::class.java)?.let {
+                val defaultMethod = MethodCallExpr(builderCall, propertyName)
+                defaultMethod.addArgument(it.value.toString()+"f")
+                builderCall = defaultMethod
+            }
+
             //Strings
             it.getAnnotation(DefaultString::class.java)?.let {
                 val defaultMethod = MethodCallExpr(builderCall, propertyName)
