@@ -10,8 +10,8 @@ import de.wr.libsimpledataclasses.DataClassFactory;
  */
 @DataClassFactory
 public abstract class NullableTestDataFactory {
-    abstract @Nullable Void createNullableTestObject0(String s1, @NonNull String s2);
-    abstract Void createNullableTestObject2(String s1, @Nullable String s2);
-    abstract Void createNullableTestObject3(String s1, String s2);
-    abstract @Nullable Void createNullableTestObject4(String s1, String s2);
+    abstract @Nullable Void nullableTestObject0(String s1, @NonNull String s2);
+    abstract Void nullableTestObject2(String s1, @Nullable String s2);
+    abstract Void nullableTestObject3(String s1, String s2);
+    abstract @Nullable Void nullableTestObject4(String s1, String s2);
 }

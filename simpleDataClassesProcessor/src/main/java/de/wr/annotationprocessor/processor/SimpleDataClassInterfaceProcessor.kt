@@ -95,14 +95,14 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
             typeElement.enclosedElements
                     .toObservable().filter {
-                        it -> it is ExecutableElement && it.simpleName.startsWith("create")
+                        it -> it is ExecutableElement
                     }
                     .cast(ExecutableElement::class.java)
                     .blockingForEach {
                         info(element, "Data class def found: %s", it.simpleName)
 
                         try {
-                            val fileName = it.simpleName.substring("create".length)
+                            val fileName = it.simpleName.substring(0,1).toUpperCase() + it.simpleName.substring(1)
                             val source = processingEnv.filer.createSourceFile(fileName)
 
                             val writer = BufferedWriter(source.openWriter())
