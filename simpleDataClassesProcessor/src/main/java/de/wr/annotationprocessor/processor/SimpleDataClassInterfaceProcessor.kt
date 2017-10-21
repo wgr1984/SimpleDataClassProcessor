@@ -134,6 +134,11 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         // create the type declaration
         val type = cu.addClass(className, AstModifier.ABSTRACT);
         type.addAnnotation(AutoValue::class.java)
+        factoryElement.annotationMirrors
+                .union(creationMethod.annotationMirrors)
+                .find { it.toString().contains("Parcelable") }?.let {
+            type.addImplementedType("android.os.Parcelable")
+        }
         type.tryAddImportToParentCompilationUnit(AutoValue.Builder::class.java)
 
         val builderType = cuBuilder.addClass("Builder", AstModifier.ABSTRACT, AstModifier.STATIC)

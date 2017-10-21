@@ -1,14 +1,13 @@
 package de.wr.rxextensions;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringDef;
 
 import java.util.List;
 
 import de.wr.libsimpledataclasses.DataClassFactory;
 import de.wr.libsimpledataclasses.DefaultInt;
 import de.wr.libsimpledataclasses.DefaultString;
+import de.wr.libsimpledataclasses.Parcelable;
 
 /**
  * Created by wolfgangreithmeier on 15/04/2017.
@@ -22,5 +21,5 @@ public abstract class DataFactory {
 
     abstract Void dataObject2(@Nullable String val1, @Nullable List<List<de.wr.rxextensions.DataObject1>> list, double number1);
 
-    abstract Void dataObject3(byte by, double d, float f, int i, short s, boolean b, long l, Number number);
+    @Parcelable abstract Void dataObject3(byte by, double d, float f, int i, short s, boolean b, long l, Number number);
 }
