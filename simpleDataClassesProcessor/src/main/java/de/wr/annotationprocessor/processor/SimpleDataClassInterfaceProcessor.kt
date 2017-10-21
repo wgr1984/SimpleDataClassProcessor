@@ -209,7 +209,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                     .removeBody()
 
             // Create Setter
-            builderType.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
+            val propertySetter = builderType.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
                     .addParameter(it.asType().toString(), propertyName)
                     .setType("Builder")
                     .removeBody()
@@ -284,27 +284,21 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
             //Nullables
             if (!it.asType().kind.isPrimitive) {
-                val dataClassFactoryAnnotion = factoryElement.getAnnotation(DataClassFactory::class.java)
-                if (dataClassFactoryAnnotion.nullableAsDefault) {
-                    propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
-                            .parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
-                } else {
-                    val nullableAnnotated =
-                            (factoryElement.annotationMirrors
-                                .union(creationMethod.annotationMirrors)
-                                .any { it.toString().contains("Nullable") }
-                                && !it.annotationMirrors
-                                    .any { it.toString().toLowerCase().contains("nonnull") })
-                            || it.annotationMirrors
-                                .any { it.toString().contains("Nullable") }
+                val nullableAnnotated =
+                        (factoryElement.annotationMirrors
+                            .union(creationMethod.annotationMirrors)
+                            .any { it.toString().contains("Nullable") }
+                            && !it.annotationMirrors
+                                .any { it.toString().toLowerCase().contains("nonnull") })
+                        || it.annotationMirrors
+                            .any { it.toString().contains("Nullable") }
 
-                    if (nullableAnnotated) {
-                        propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
-                                .parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
-                    } else {
-                        propertyGetter.addAnnotation(javax.annotation.Nonnull::class.java)
-                                .parameters.forEach { it.addAnnotation(javax.annotation.Nonnull::class.java) }
-                    }
+                if (nullableAnnotated) {
+                    propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
+                    propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
+                } else {
+                    propertyGetter.addAnnotation(javax.annotation.Nonnull::class.java)
+                    propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nonnull::class.java) }
                 }
             }
         }
