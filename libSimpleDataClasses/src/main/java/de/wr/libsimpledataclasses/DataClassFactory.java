@@ -10,6 +10,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface DataClassFactory {
-    Class<?> value();
     boolean nullableAsDefault() default false;
 }

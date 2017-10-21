@@ -1,5 +1,6 @@
 package de.wr.rxextensions;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
@@ -12,7 +13,7 @@ import de.wr.libsimpledataclasses.DefaultString;
 /**
  * Created by wolfgangreithmeier on 15/04/2017.
  */
-@DataClassFactory(value = Nullable.class, nullableAsDefault = true)
+@DataClassFactory
 public abstract class DataFactory {
 
     public final String test = "testValue";
@@ -22,6 +23,4 @@ public abstract class DataFactory {
     abstract Void createDataObject2(@Nullable String val1, @Nullable List<List<de.wr.rxextensions.DataObject1>> list, double number1);
 
     abstract Void createDataObject3(byte by, double d, float f, int i, short s, boolean b, long l, Number number);
-
-//    abstract Void createDataObject3(byte by, double d, float f, int i, short s, boolean b, long l, Number number);
 }

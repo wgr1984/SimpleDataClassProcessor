@@ -205,16 +205,23 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             if (!it.asType().kind.isPrimitive) {
                 val dataClassFactoryAnnotion = factoryElement.getAnnotation(DataClassFactory::class.java)
                 if (dataClassFactoryAnnotion.nullableAsDefault) {
-                    factoryElement.annotationMirrors.find { it.toString().contains("DataClassFactory") }?.let {
-                        val nullableClass: ExecutableElement? = it.elementValues.keys.find { key -> key.toString().contains("value") }
-                        val classValue = it.elementValues[nullableClass].toString()
-                        propertyGetter.addAnnotation(classValue.substring(0, classValue.lastIndexOf(".")));
-                    }
+                    propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
+                    propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
                 } else {
-                    creationMethod.annotationMirrors
-                            .union(it.annotationMirrors)
-                            .find { it.toString().contains("Nullable") }?.let {
-                        propertyGetter.addAnnotation(it.annotationType.toString())
+                    val nullableAnnotated =
+                            (creationMethod.annotationMirrors
+                                .any { it.toString().contains("Nullable") }
+                                && !it.annotationMirrors
+                                    .any { it.toString().toLowerCase().contains("nonnull") })
+                            || it.annotationMirrors
+                                .any { it.toString().contains("Nullable") }
+
+                    if (nullableAnnotated) {
+                        propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
+                        propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
+                    } else {
+                        propertyGetter.addAnnotation(javax.annotation.Nonnull::class.java)
+                        propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nonnull::class.java) }
                     }
                 }
             }

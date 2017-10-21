@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 //import de.wr.rxextensions.DataObject1;
 import de.wr.rxextensions.DataObject1;
+import de.wr.rxextensions.DataObject3;
 import de.wr.rxextensions.databinding.ActivityMainBinding;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -42,6 +43,12 @@ public class MainActivity extends AppCompatActivity {
                 Collections.singletonList(
                         Collections.singletonList(DataObject1.builder().build())))
                 .build();
+
+        DataObject3 o3 = DataObject3.builder().number(null).build();
+        Number number = o3.number();
+        if (number != null) {
+            number.byteValue();
+        }
 
         System.out.println(build);
     }
