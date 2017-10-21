@@ -7,11 +7,15 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.Console;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 //import de.wr.rxextensions.DataObject1;
+import de.wr.rxextensions.DataFactoryTypeAdapterFactory;
 import de.wr.rxextensions.DataObject1;
 import de.wr.rxextensions.DataObject3;
 import de.wr.rxextensions.databinding.ActivityMainBinding;
@@ -50,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
             number.byteValue();
         }
 
+        Gson gson = new GsonBuilder().registerTypeAdapterFactory(DataFactoryTypeAdapterFactory.create()).create();
+        String json = gson.toJson(o3);
+        DataObject3 o3New = gson.fromJson(json, DataObject3.class);
+        System.out.println(o3.equals(o3New));
+
+        System.out.println(json);
         System.out.println(build);
     }
 

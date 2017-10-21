@@ -8,6 +8,9 @@ import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.google.auto.value.AutoValue
+import com.google.gson.TypeAdapter
+import com.google.gson.TypeAdapterFactory
+import com.ryanharter.auto.value.gson.GsonTypeAdapterFactory
 import de.wr.libsimpledataclasses.*
 
 import javax.annotation.processing.AbstractProcessor
@@ -46,7 +49,6 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
     private lateinit var elementUtils: Elements
     private lateinit var filer: Filer
     private lateinit var messager: Messager
-    private var qualifiedName: String? = null
 
     override fun getSupportedSourceVersion(): SourceVersion {
         return latestSupported()
@@ -87,43 +89,87 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
             objectType = typeElement.simpleName.toString()
 
-            qualifiedName = typeElement.qualifiedName.toString()
+            val qualifiedName = typeElement.qualifiedName.toString()
 
             info(element, "The annotated element %s found", element)
 
-            typeElement.enclosedElements
-                    .toObservable().filter {
-                        it -> it is ExecutableElement
-                    }
-                    .cast(ExecutableElement::class.java)
-                    .blockingForEach {
-                        info(element, "Data class def found: %s", it.simpleName)
+            val classesList = typeElement.enclosedElements
+                    .filter { it -> it is ExecutableElement && it.returnType.toString().contains("Void") }
+                    .map { it -> it as ExecutableElement }
 
-                        try {
-                            val fileName = it.simpleName.substring(0,1).toUpperCase() + it.simpleName.substring(1)
-                            val source = processingEnv.filer.createSourceFile(fileName)
-
-                            val writer = BufferedWriter(source.openWriter())
-
-                            generateDataClass(
-                                    element,
-                                    writer,
-                                    fileName,
-                                    typeElement.qualifiedName.substring(0, typeElement.qualifiedName.length - typeElement.simpleName.length -1 ),
-                                    it)
-
-                            writer.flush()
-                            writer.close()
-
-                            info(element,"Data class generated: %s %n", fileName)
-                        } catch (e: IOException) {
-                            System.err.println(objectType + " :" + e + e.message)
-                        }
-                    }
+            if (classesList.isNotEmpty()) {
+                classesList.forEach { it -> generateAutoValueClasses(element, it, typeElement) }
+                if (element.annotationMirrors
+                        .union(classesList.flatMap { it -> it.annotationMirrors })
+                        .any { it -> it.toString().contains("Gson") }) {
+                    generateAutoValueGsonFactory(qualifiedName, typeElement)
+                }
+            }
         }
 
         return true
     }
+
+    private fun generateAutoValueGsonFactory(qualifiedName: String, typeElement: TypeElement) {
+        try {
+            val fileName = typeElement.simpleName.substring(0, 1).toUpperCase() + typeElement.simpleName.substring(1) + "TypeAdapterFactory"
+            val source = processingEnv.filer.createSourceFile(fileName)
+
+            val writer = BufferedWriter(source.openWriter())
+
+            val cu = CompilationUnit();
+            // set the package
+            cu.setPackageDeclaration(getPackageName(typeElement));
+
+            cu.addClass(fileName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
+                .addAnnotation(GsonTypeAdapterFactory::class.java)
+                .addImplementedType(TypeAdapterFactory::class.java)
+                .addMethod("create", AstModifier.PUBLIC, AstModifier.STATIC).setBody(
+                    BlockStmt().addStatement(ReturnStmt()
+                            .setExpression(ObjectCreationExpr().setType("AutoValueGson_$fileName")))
+                ).setType(TypeAdapterFactory::class.java)
+
+            writer.run {
+                write(cu.toString())
+                flush()
+                close()
+            }
+
+            info(typeElement, "Gson Data class generated: %s %n", fileName)
+        } catch (e: IOException) {
+            System.err.println(objectType + " :" + e + e.message)
+        }
+    }
+
+    private fun generateAutoValueClasses(element: TypeElement, it: ExecutableElement, typeElement: TypeElement) {
+        info(element, "Data class def found: %s", it.simpleName)
+
+        try {
+            val fileName = it.simpleName.substring(0, 1).toUpperCase() + it.simpleName.substring(1)
+            val source = processingEnv.filer.createSourceFile(fileName)
+
+            val writer = BufferedWriter(source.openWriter())
+
+            generateDataClass(
+                    element,
+                    writer,
+                    fileName,
+                    getPackageName(typeElement),
+                    it)
+
+            writer.run {
+                flush()
+                close()
+            }
+
+            info(element, "Data class generated: %s %n", fileName)
+        } catch (e: IOException) {
+            System.err.println(objectType + " :" + e + e.message)
+        }
+    }
+
+    private fun getPackageName(typeElement: TypeElement) =
+            typeElement.qualifiedName.substring(0, typeElement.qualifiedName.length - typeElement.simpleName.length - 1)
 
     private fun generateDataClass(factoryElement: TypeElement, writer: BufferedWriter?, className: String, packageName: String, creationMethod: ExecutableElement) {
         val cu = CompilationUnit();
@@ -132,8 +178,8 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         cu.setPackageDeclaration(packageName);
 
         // create the type declaration
-        val type = cu.addClass(className, AstModifier.ABSTRACT);
-        type.addAnnotation(AutoValue::class.java)
+        val type = cu.addClass(className, AstModifier.ABSTRACT)
+                    .addAnnotation(AutoValue::class.java)
         factoryElement.annotationMirrors
                 .union(creationMethod.annotationMirrors)
                 .find { it.toString().contains("Parcelable") }?.let {
@@ -142,15 +188,14 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         type.tryAddImportToParentCompilationUnit(AutoValue.Builder::class.java)
 
         val builderType = cuBuilder.addClass("Builder", AstModifier.ABSTRACT, AstModifier.STATIC)
-        builderType.addAnnotation(AutoValue.Builder::class.java.canonicalName)
+                            .addAnnotation(AutoValue.Builder::class.java.canonicalName)
         type.addMember(builderType)
 
         val builderMethod = type.addMethod("builder", AstModifier.STATIC)
-        builderMethod.setType("Builder")
+                                .setType("Builder")
 
         val builderBody = BlockStmt()
-        val newOperation = ObjectCreationExpr()
-        newOperation.setType("AutoValue_$className.Builder")
+        val newOperation = ObjectCreationExpr().setType("AutoValue_$className.Builder")
 
         var builderCall:Expression = newOperation
 
@@ -159,71 +204,63 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             // create a method
 
             // Create Getter
-            val propertyGetter = type.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT) // add parameters to method
-            propertyGetter.setType(it.asType().toString())
-            propertyGetter.removeBody()
+            val propertyGetter = type.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
+                    .setType(it.asType().toString())
+                    .removeBody()
 
             // Create Setter
-            val propertySetter = builderType.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT) // add parameters to method
-            propertySetter.addParameter(it.asType().toString(), propertyName)
-            propertySetter.setType("Builder")
-            propertySetter.removeBody()
+            builderType.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
+                    .addParameter(it.asType().toString(), propertyName)
+                    .setType("Builder")
+                    .removeBody()
 
             //set defaults
             // ints
             it.getAnnotation(DefaultInt::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(IntegerLiteralExpr(it.value))
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument(IntegerLiteralExpr(it.value))
             }
 
             // longs
             it.getAnnotation(DefaultLong::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(LongLiteralExpr(it.value))
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument(LongLiteralExpr(it.value))
             }
 
             // short
             it.getAnnotation(DefaultShort::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument("(short)"+it.value.toString())
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument("(short)"+it.value.toString())
             }
 
             // Byte
             it.getAnnotation(DefaultByte::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument("(byte)"+it.value.toString())
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument("(byte)"+it.value.toString())
             }
 
             // Boolean
             it.getAnnotation(DefaultBool::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(BooleanLiteralExpr(it.value))
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument(BooleanLiteralExpr(it.value))
             }
 
             // Double
             it.getAnnotation(DefaultDouble::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(DoubleLiteralExpr(it.value))
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument(DoubleLiteralExpr(it.value))
             }
 
             // Float
             it.getAnnotation(DefaultFloat::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(it.value.toString()+"f")
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument(it.value.toString()+"f")
             }
 
             //Strings
             it.getAnnotation(DefaultString::class.java)?.let {
-                val defaultMethod = MethodCallExpr(builderCall, propertyName)
-                defaultMethod.addArgument(StringLiteralExpr(it.value))
-                builderCall = defaultMethod
+                builderCall = MethodCallExpr(builderCall, propertyName)
+                        .addArgument(StringLiteralExpr(it.value))
             }
 
             //def values for primary types
@@ -250,10 +287,11 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                 val dataClassFactoryAnnotion = factoryElement.getAnnotation(DataClassFactory::class.java)
                 if (dataClassFactoryAnnotion.nullableAsDefault) {
                     propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
-                    propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
+                            .parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
                 } else {
                     val nullableAnnotated =
-                            (creationMethod.annotationMirrors
+                            (factoryElement.annotationMirrors
+                                .union(creationMethod.annotationMirrors)
                                 .any { it.toString().contains("Nullable") }
                                 && !it.annotationMirrors
                                     .any { it.toString().toLowerCase().contains("nonnull") })
@@ -262,10 +300,10 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
                     if (nullableAnnotated) {
                         propertyGetter.addAnnotation(javax.annotation.Nullable::class.java)
-                        propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
+                                .parameters.forEach { it.addAnnotation(javax.annotation.Nullable::class.java) }
                     } else {
                         propertyGetter.addAnnotation(javax.annotation.Nonnull::class.java)
-                        propertySetter.parameters.forEach { it.addAnnotation(javax.annotation.Nonnull::class.java) }
+                                .parameters.forEach { it.addAnnotation(javax.annotation.Nonnull::class.java) }
                     }
                 }
             }
@@ -276,17 +314,37 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         builderMethod.setBody(builderBody)
 
         // Add build method
-        val propertySetter = builderType.addMethod("build", AstModifier.PUBLIC, AstModifier.ABSTRACT) // add parameters to method
-        propertySetter.setType(className)
-        propertySetter.removeBody()
+        val propertySetter = builderType.addMethod("build", AstModifier.PUBLIC, AstModifier.ABSTRACT)
+                .setType(className)
+                .removeBody()
 
         // toBuilder
-        val toBuilder = type.addMethod("toBuilder", AstModifier.PUBLIC, AstModifier.ABSTRACT) // add parameters to method
-        toBuilder.setType("Builder")
-        toBuilder.removeBody()
+        val toBuilder = type.addMethod("toBuilder", AstModifier.PUBLIC, AstModifier.ABSTRACT)
+                .setType("Builder")
+                .removeBody()
 
-        writer?.write(cu.toString())
-        writer?.flush()
+        // add gson adapter
+        factoryElement.annotationMirrors
+                .union(creationMethod.annotationMirrors)
+                .find { it.toString().contains("Gson") }?.let {
+            val gsonTypeAdapter = type.addMethod("typeAdapter", AstModifier.PUBLIC, AstModifier.STATIC)
+                    .setType(TypeAdapter::class.java.canonicalName+"<"+className+">")
+                    .addParameter(com.google.gson.Gson::class.java, "gson")
+
+            val typeAdapterBody = BlockStmt()
+            val newTypeAdapterStmt = ObjectCreationExpr()
+                    .setType("AutoValue_$className.GsonTypeAdapter")
+                    .addArgument("gson")
+
+            val typeAdapterReturn = ReturnStmt(newTypeAdapterStmt)
+            typeAdapterBody.addStatement(typeAdapterReturn)
+            gsonTypeAdapter.setBody(typeAdapterBody)
+        }
+
+        writer?.run {
+            write(cu.toString())
+            flush()
+        }
     }
 
     private fun error(e: Element, msg: String, vararg args: Any) {
@@ -298,7 +356,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
     private fun info(e: Element, msg: String, vararg args: Any) {
         messager.printMessage(
-                Diagnostic.Kind.NOTE,
+                Diagnostic.Kind.WARNING,
                 String.format(msg, *args),
                 e)
     }
