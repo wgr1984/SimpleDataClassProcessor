@@ -3,19 +3,20 @@ android:
   components:
     - tools
     - platform-tools
-    - tools
-    # The BuildTools version used by your project
-    - build-tools-26.0.2
-    # The SDK version used to compile your project
-    - android-26
-    - sys-img-armeabi-v7a-$ANDROID_TARGET
-    - extra-android-support
-    - extra-android-m2repository
+    - build-tools-$ANDROID_BUILD_TOOLS
+    - android-$ANDROID_API
+    - android-$EMULATOR_API_LEVEL
     - extra-google-m2repository
-    
+    - extra-android-m2repository # for design library
+    - addon-google_apis-google-25 # google play services
+    - sys-img-armeabi-v7a-addon-google_apis-google-$ANDROID_API_LEVEL
+    - sys-img-armeabi-v7a-android-$EMULATOR_API_LEVEL # the fix
 env:
-  matrix:
+ global:
+    - ANDROID_API=26
+    - EMULATOR_API=24
     - ANDROID_TARGET=android-24  ANDROID_ABI=armeabi-v7a
+    - ANDROID_BUILD_TOOLS=26.0.2
 before_script:
   - echo no | android create avd --force -n test -t $ANDROID_TARGET --abi $ANDROID_ABI
   - emulator -avd test -no-skin -no-audio -no-window &
