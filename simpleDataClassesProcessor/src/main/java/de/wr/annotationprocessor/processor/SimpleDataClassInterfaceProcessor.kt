@@ -1,9 +1,6 @@
 package de.wr.annotationprocessor.processor
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.BodyDeclaration
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
-import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
@@ -28,15 +25,11 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
-import io.reactivex.annotations.Nullable
-import io.reactivex.rxkotlin.toObservable
 import java.io.*
 import java.util.*
-import java.util.stream.Collectors
 
 import javax.lang.model.SourceVersion.latestSupported
 import javax.lang.model.type.TypeKind
-import javax.xml.crypto.Data
 
 import com.github.javaparser.ast.Modifier as AstModifier
 
@@ -102,7 +95,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                 if (element.annotationMirrors
                         .union(classesList.flatMap { it -> it.annotationMirrors })
                         .any { it -> it.toString().contains("Gson") }) {
-                    generateAutoValueGsonFactory(qualifiedName, typeElement)
+                    generateAutoValueGsonFactory(typeElement)
                 }
             }
         }
@@ -110,7 +103,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         return true
     }
 
-    private fun generateAutoValueGsonFactory(qualifiedName: String, typeElement: TypeElement) {
+    private fun generateAutoValueGsonFactory(typeElement: TypeElement) {
         try {
             val fileName = typeElement.simpleName.substring(0, 1).toUpperCase() + typeElement.simpleName.substring(1) + "TypeAdapterFactory"
             val source = processingEnv.filer.createSourceFile(fileName)
@@ -308,12 +301,12 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         builderMethod.setBody(builderBody)
 
         // Add build method
-        val propertySetter = builderType.addMethod("build", AstModifier.PUBLIC, AstModifier.ABSTRACT)
+        builderType.addMethod("build", AstModifier.PUBLIC, AstModifier.ABSTRACT)
                 .setType(className)
                 .removeBody()
 
         // toBuilder
-        val toBuilder = type.addMethod("toBuilder", AstModifier.PUBLIC, AstModifier.ABSTRACT)
+        type.addMethod("toBuilder", AstModifier.PUBLIC, AstModifier.ABSTRACT)
                 .setType("Builder")
                 .removeBody()
 

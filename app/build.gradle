@@ -1,24 +1,13 @@
 buildscript {
     repositories {
+        mavenLocal()
         jcenter()
         mavenCentral()
         maven { url "https://jitpack.io" }
-//        maven { url 'https://github.com/Archinamon/GradleAspectJ-Android/raw/master' }
-    }
-    dependencies {
-//        classpath 'com.github.Archinamon:GradleAspectJ-Android:3.0.2'
     }
 }
 
 apply plugin: 'com.android.application'
-//apply plugin: 'com.archinamon.aspectj-ext'
-//
-//aspectj {
-//    /* @see Ext plugin config **/
-//    includeAllJars true
-//    extendClasspath true
-//    weaveInfo true
-//}
 
 android {
     compileSdkVersion 26
@@ -46,6 +35,11 @@ android {
     }
 }
 
+
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -69,16 +63,10 @@ dependencies {
 
 
     provided group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
-    provided project(path: ':libSimpleDataClasses')
-    annotationProcessor project(":simpleDataClassesProcessor")
-//    provided files('libs/processor.jar')
+//    provided project(path: ':libSimpleDataClasses')
+//    annotationProcessor project(":simpleDataClassesProcessor")
+    annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.1"
+    provided "de.wr.simpledataclasses:libSimpleDataClasses:0.1"
 }
 
-android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true
-
-//task processorTask(type: Exec) {
-//    commandLine 'cp', '../simpleDataClassesProcessor/build/libs/simpleDataClassesProcessor.jar', 'libs/'
-//}
-//
-//processorTask.dependsOn(':simpleDataClassesProcessor:build')
-//preBuild.dependsOn(processorTask)
+//android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true

@@ -3,10 +3,8 @@ buildscript {
         jcenter()
         mavenCentral()
         maven { url "https://jitpack.io" }
-        maven { url 'https://github.com/Archinamon/GradleAspectJ-Android/raw/master' }
     }
     dependencies {
-        classpath 'com.github.Archinamon:GradleAspectJ-Android:3.0.2'
         classpath 'com.github.javaparser:javaparser-core:3.2.12'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -14,6 +12,26 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
+apply plugin: 'maven-publish'
+
+group = 'de.wr.simpledataclasses'
+version = '0.1'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+publishing {
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url "$buildDir/repo"
+        }
+    }
+}
 
 dependencies {
     compile 'com.squareup:javapoet:1.8.0'
