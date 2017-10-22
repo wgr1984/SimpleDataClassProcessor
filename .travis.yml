@@ -1,4 +1,13 @@
 language: android
+sudo: required
+
+env:
+ global:
+    - ANDROID_API=26
+    - EMULATOR_API=24
+    - ANDROID_TARGET=android-24  ANDROID_ABI=armeabi-v7a
+    - ANDROID_BUILD_TOOLS=26.0.2
+    
 android:
   components:
     - tools
@@ -11,12 +20,7 @@ android:
     - addon-google_apis-google-25 # google play services
     - sys-img-armeabi-v7a-addon-google_apis-google-$ANDROID_API_LEVEL
     - sys-img-armeabi-v7a-android-$EMULATOR_API_LEVEL # the fix
-env:
- global:
-    - ANDROID_API=26
-    - EMULATOR_API=24
-    - ANDROID_TARGET=android-24  ANDROID_ABI=armeabi-v7a
-    - ANDROID_BUILD_TOOLS=26.0.2
+    
 before_script:
   - echo no | android create avd --force -n test -t $ANDROID_TARGET --abi $ANDROID_ABI
   - emulator -avd test -no-skin -no-audio -no-window &
