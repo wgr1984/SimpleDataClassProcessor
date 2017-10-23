@@ -11,6 +11,7 @@ import de.wr.libsimpledataclasses.DefaultFloat;
 import de.wr.libsimpledataclasses.DefaultInt;
 import de.wr.libsimpledataclasses.DefaultLong;
 import de.wr.libsimpledataclasses.DefaultShort;
+import de.wr.libsimpledataclasses.DefaultString;
 
 /**
  * Created by wolfgangreithmeier on 21.10.17.
@@ -24,6 +25,7 @@ public abstract class DefaultValuesTestDataFactory {
             @DefaultByte(4) byte byteV,
             @DefaultBool(true) boolean boolV,
             @DefaultFloat(5f) float floatV,
-            @DefaultDouble(6d) double doubleV
+            @DefaultDouble(6d) double doubleV,
+            @DefaultString("This is a test") String valueS
     );
 }

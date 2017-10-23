@@ -22,7 +22,7 @@ import de.wr.rxextensions.databinding.ActivityMainBinding;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
-//import kotlin.collections.CollectionsKt;
+import  de.wr.rxextensions.SimpleObject;
 
 import javax.inject.Inject;
 
@@ -58,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
         String json = gson.toJson(o3);
         DataObject3 o3New = gson.fromJson(json, DataObject3.class);
         System.out.println(o3.equals(o3New));
+
+        SimpleObject simpleObject = SimpleObject.builder().value1(2).value2("String").value3(Collections.emptyList()).build();
+        int i = simpleObject.value1();
 
         System.out.println(json);
         System.out.println(build);
