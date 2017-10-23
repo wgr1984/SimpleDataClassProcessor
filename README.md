@@ -190,4 +190,5 @@ Todo:
 - [x] Provide samples and doc
 - [ ] support auto-value-gson default values
 - [ ] support auto-value-moshi
+- [ ] remove data class factories from deployed classes
 
