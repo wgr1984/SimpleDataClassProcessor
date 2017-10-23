@@ -122,7 +122,7 @@ parcable and gson-adapter feature.
 ```Java
 @DataClassFactory
 public abstract class DefaultValuesTestDataFactory {
-    abstract @Nullable Void defaultValueTestObject(
+    abstract Void defaultValueTestObject(
             @DefaultInt(1) int intV,
             @DefaultLong(2L) long longV,
             @DefaultShort(3) short shortV,
@@ -140,6 +140,51 @@ static Builder builder() {
                   .intV(1).longV(2).shortV((short) 3).byteV((byte)4)
                   .boolV(true).floatV(5.0f).doubleV(6.0).valueS("This is a test");
     }
+```
+
+## Nullability ##
+The user can choose how autovalue handles null values.
+Per default they are *not* allowed. To change that behaviour we can just add ``` @Nullable  ``` 
+either to the factory itself, infront of each method / class or parameter that is allowed to contain
+a null value.
+```Java
+@DataClassFactory
+public abstract class NullableTestDataFactory {
+    abstract @Nullable Void nullableTestObject0(String s1, @NonNull String s2);
+    abstract Void nullableTestObject2(String s1, @Nullable String s2);
+    abstract Void nullableTestObject3(String s1, String s2);
+    abstract @Nullable Void nullableTestObject4(String s1, String s2);
+}
+```
+As you can see using ``` @NonNull ``` allows to exclude certain parameter from allowing null in case the factory or method
+was null annotated.
+
+## Parcelable ##
+In order to make a class ``` android.os.Parcelable ``` safe just annotation the corresponding
+factory or method/class using ``` @Parcable ```. E.g.:
+```Java
+@Parcelable abstract Void dataObject3(byte by, double d, float f, int i, short s, boolean b, long l, Number number);
+```
+Inside the generated code [auto-value-parcel](https://github.com/rharter/auto-value-parcel) will used to automatically
+generate the needed classes and methodes to implement Parcable Serialization.
+
+## GSON ##
+Talking about serialization: The Simple Data Class processor supports json serialization, too, currently via
+the [auto-value-gson](https://github.com/rharter/auto-value-gson). Therefore similar to the Parsable annotation
+an ``` @Gson ``` annotation is provided.
+```Java
+@DataClassFactory
+@Nullable
+public abstract class DataFactory {
+   @Gson abstract Void dataObject1(@DefaultString(test) String val1, @DefaultInt(2) int number, @DefaultInt(3) int number2);
+}
+```
+This will also generate the needed ``` TypeAdapterFactory ``` in this case ``` DataFactoryTypeAdapterFactory ``` 
+which is needed to provide easy non reflection based (de-)serialization:
+```Java
+Gson gson = new GsonBuilder().registerTypeAdapterFactory(DataFactoryTypeAdapterFactory.create()).create();
+String json = gson.toJson(o3);
+DataObject3 o3New = gson.fromJson(json, DataObject3.class);
 ```
 
 Todo:
