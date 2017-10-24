@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'de.wr.simpledataclasses'
-version = '0.1'
+version = '0.2'
 
 publishing {
     publications {
@@ -39,9 +39,9 @@ bintray {
         labels = ['autovalue', 'annotation-processor', 'java', 'kotlin']
         publicDownloadNumbers = true
         version {
-            name = '0.1'
-            desc = 'Simple Data Class Processor 0.1'
-            vcsTag = '0.1'
+            name = '0.2'
+            desc = 'Simple Data Class Processor ' + '0.2'
+            vcsTag = '0.2'
         }
     }
 }
