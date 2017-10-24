@@ -10,13 +10,13 @@ Furthermore it integrates the following autovalue extensions:
 
 # How to use
 As project currenlty not published to major maven repos please add:
-```
+```Groovy
 repositories {
    maven { url "https://dl.bintray.com/wgr1984/SimpleDataClasses"}
 }
 ```
 and the following two dependecies:
-```
+```Groovy
 annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.1"
 provided "de.wr.simpledataclasses:libSimpleDataClasses:0.1"
 ```
@@ -24,7 +24,7 @@ In order to the generate a data class can easily defined via a factory class
 inside the package the data classes should be generated.
 
 # Motivation #
-Defining pojos in java involes quite some boiler plate code
+Defining POJOs in java involes quite some boilerplate code
 ```Java
 public class SimpleObject {
    private int value1;
@@ -56,8 +56,7 @@ public class SimpleObject {
    }
 }
 ```
-google autoValue provides some ease, as it also provides immutability for free as well as
-automatically generated toString, equals and hashCode functions.
+Google's [AutoValue](https://github.com/google/auto/tree/master/value) provides some ease, as it also provides immutability for free as well as automatically generated toString, equals and hashCode functions.
 ```Java
 @AutoValue()
 abstract class SimpleObject {
@@ -85,17 +84,18 @@ abstract class SimpleObject {
     public abstract java.util.List<java.lang.String> value3();
 }
 ```
-but in terms of lines of code it does not even get close to Kotlins data classes:
+But in terms of lines of code it does not even get close to Kotlin's data classes:
 ```Kotlin
 data class SimpleObject(var value1: Int, var value2: String, var value3: List<String>)
 ```
 ## Challenge ##
-So now the challenge is to combine the relayability of autoValue and simplicity
-of kotlin like single-line data class definitions. 
+So now the challenge is to combine the relayability of AutoValue with the simplicity
+of Kotlin like single-line data class definitions. 
 Choosing the easiest way of java code generation - annotion processing - the following
-idea involed. 
+idea involed:
+
 *Let the annotiation processor generate autoValue classes from one single line*
-```
+```Java
 import java.util.List;
 
 import de.wr.libsimpledataclasses.DataClassFactory;
@@ -116,7 +116,7 @@ int i = simpleObject.value1();
 ```
 
 Furthermore it allows to define additional features such as default values, nullable/nonnull,
-parcable and gson-adapter.
+Parcelable and gson-adapter.
 
 ## Default Values ##
 ```Java
@@ -129,7 +129,8 @@ public abstract class DefaultValuesTestDataFactory {
             @DefaultByte(4) byte byteV,
             @DefaultBool(true) boolean boolV,
             @DefaultFloat(5f) float floatV,
-            @DefaultDouble(6d) double doubleV
+            @DefaultDouble(6d) double doubleV,
+            @DefaultString("This is a test") String valueS
     );
 }
 ```
@@ -189,4 +190,5 @@ Todo:
 - [x] Provide samples and doc
 - [ ] support auto-value-gson default values
 - [ ] support auto-value-moshi
+- [ ] remove data class factories from deployed classes
 
