@@ -7,8 +7,10 @@ import com.github.javaparser.ast.stmt.ReturnStmt
 import com.google.auto.value.AutoValue
 import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
+import com.google.gson.annotations.SerializedName
 import com.ryanharter.auto.value.gson.GsonTypeAdapterFactory
 import de.wr.libsimpledataclasses.*
+import de.wr.libsimpledataclasses.Named
 
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Filer
@@ -206,6 +208,12 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                     .addParameter(it.asType().toString(), propertyName)
                     .setType("Builder")
                     .removeBody()
+
+            //Name annotations
+            it.getAnnotation(Named::class.java)?.let {
+                propertyGetter.addAndGetAnnotation(SerializedName::class.java)
+                        .addPair("value", "\"" + it.value + "\"")
+            }
 
             //set defaults
             // ints

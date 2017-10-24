@@ -1,4 +1,4 @@
-package de.wr.rxextensions;
+package de.wr.simpledataclasses;
 
 import android.databinding.DataBindingUtil;
 import android.os.Build;
@@ -10,21 +10,19 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.Console;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-//import de.wr.rxextensions.DataObject1;
-import de.wr.rxextensions.DataFactoryTypeAdapterFactory;
-import de.wr.rxextensions.DataObject1;
-import de.wr.rxextensions.DataObject3;
-import de.wr.rxextensions.databinding.ActivityMainBinding;
+import de.wr.simpledataclasses.databinding.ActivityMainBinding;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
-import  de.wr.rxextensions.SimpleObject;
-
-import javax.inject.Inject;
+import de.wr.simpledataclasses.DataObject1;
+import de.wr.simpledataclasses.DataObject2;
+import de.wr.simpledataclasses.DataObject3;
+import de.wr.simpledataclasses.SimpleObject;
+import de.wr.simpledataclasses.SimpleObjectNamed;
+import de.wr.simpledataclasses.DataFactoryTypeAdapterFactory;
 
 import static io.reactivex.android.schedulers.AndroidSchedulers.mainThread;
 
@@ -43,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 //        DataObject1$Builder
 //        Toast.makeText(this, sampleField.getValue(), Toast.LENGTH_LONG ).show();
 
-        de.wr.rxextensions.DataObject2 build = de.wr.rxextensions.DataObject2.builder().list(
+        de.wr.simpledataclasses.DataObject2 build = de.wr.simpledataclasses.DataObject2.builder().list(
                 Collections.singletonList(
                         Collections.singletonList(DataObject1.builder().build())))
                 .build();
@@ -62,8 +60,19 @@ public class MainActivity extends AppCompatActivity {
         SimpleObject simpleObject = SimpleObject.builder().value1(2).value2("String").value3(Collections.emptyList()).build();
         int i = simpleObject.value1();
 
-        System.out.println(json);
-        System.out.println(build);
+        String json2 = "{" +
+                "\"value_1\":24," +
+                "\"value_2\":\"This is a test\"," +
+                "\"value_3\": [" +
+                "    \"test 1\"," +
+                "    \"test 2\"," +
+                "    \"test 3\"" +
+                "]" +
+                "}";
+        System.out.println(json2);
+        SimpleObjectNamed simpleObjectNamed = gson.fromJson(json2, SimpleObjectNamed.class);
+        System.out.println(simpleObjectNamed.toString());
+        System.out.println(gson.toJson(simpleObjectNamed));
     }
 
     @Override

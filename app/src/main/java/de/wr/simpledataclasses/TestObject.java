@@ -1,7 +1,6 @@
-package de.wr.rxextensions;
+package de.wr.simpledataclasses;
 
 import com.google.auto.value.AutoValue;
-import com.google.auto.value.AutoValue.Builder;
 
 @AutoValue()
 abstract class TestObject {

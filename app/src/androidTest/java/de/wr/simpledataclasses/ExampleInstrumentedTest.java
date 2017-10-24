@@ -1,4 +1,4 @@
-package de.wr.rxextensions;
+package de.wr.simpledataclasses;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

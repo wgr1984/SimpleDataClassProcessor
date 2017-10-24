@@ -1,4 +1,4 @@
-package de.wr.rxextensions;
+package de.wr.simpledataclasses;
 
 import org.junit.Test;
 
