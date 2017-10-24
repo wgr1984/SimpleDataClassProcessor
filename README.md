@@ -19,9 +19,17 @@ and the following two dependecies:
 ```Groovy
 annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.1"
 provided "de.wr.simpledataclasses:libSimpleDataClasses:0.1"
+provided "com.google.auto.value:auto-value:1.5.2"
+annotationProcessor "com.google.auto.value:auto-value:1.5.2"
 ```
-In order to the generate a data class can easily defined via a factory class
-inside the package the data classes should be generated.
+(optional in case extensions are used)
+```Groovy
+annotationProcessor 'com.ryanharter.auto.value:auto-value-parcel:0.2.5'
+annotationProcessor 'com.ryanharter.auto.value:auto-value-gson:0.6.0'
+provided 'com.ryanharter.auto.value:auto-value-gson-annotations:0.6.0'
+compile 'com.google.code.gson:gson:2.8.2'
+```
+
 
 # Motivation #
 Defining POJOs in java involes quite some boilerplate code
@@ -193,6 +201,25 @@ abstract @Gson Void simpleObjectNamed(
             @Named("value_3") List<String> value3);
 ```
 This will add internally the well known ```@SerializedName``` annotation.
+In case the default values provided should also be applied inside
+the gson adapter add the following config inside the build gradle of your project
+````Java
+android {
+  // ...
+  defaultConfig {
+    // ...
+    javaCompileOptions {
+      annotationProcessorOptions {
+        arguments = ['autovaluegson.mutableAdaptersWithDefaultSetters': 'true']
+      }
+    }
+  }
+}
+````
+and use ```@Gson(true)``` instead of the pure annotation.
+```Java
+@Gson(true) abstract Void dataObject1(@DefaultString(test) String val1, int number, @DefaultInt(3) int number2);
+```
 <br />
 <br />
 <br />
@@ -200,7 +227,7 @@ Todo:
 - [x] added named annotation (Gson)
 - [ ] Publish to jcenter
 - [x] Provide samples and doc
-- [ ] support auto-value-gson default values
+- [x] support auto-value-gson default values
 - [ ] support auto-value-moshi
 - [ ] remove data class factories from deployed classes
 

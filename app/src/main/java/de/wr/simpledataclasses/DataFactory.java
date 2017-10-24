@@ -19,7 +19,7 @@ public abstract class DataFactory {
 
     public final String test = "testValue";
 
-    @Gson abstract Void dataObject1(@DefaultString(test) String val1, @DefaultInt(2) int number, @DefaultInt(3) int number2);
+    @Gson(true) abstract Void dataObject1(@DefaultString(test) String val1, int number, @DefaultInt(3) int number2);
 
     abstract Void dataObject2(@Nullable String val1, @Nullable List<List<de.wr.simpledataclasses.DataObject1>> list, double number1);
 

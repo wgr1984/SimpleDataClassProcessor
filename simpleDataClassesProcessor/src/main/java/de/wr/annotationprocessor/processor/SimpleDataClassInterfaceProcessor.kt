@@ -186,6 +186,19 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                             .addAnnotation(AutoValue.Builder::class.java.canonicalName)
         type.addMember(builderType)
 
+        var newTypeAdapterStmt:Expression? = null
+        // add gson adapter
+        val gson = (factoryElement.getAnnotation(Gson::class.java)
+                ?: (creationMethod.getAnnotation(Gson::class.java)));
+
+        gson?.let {
+            if (it.value) {
+                newTypeAdapterStmt = ObjectCreationExpr()
+                        .setType("AutoValue_$className.GsonTypeAdapter")
+                        .addArgument("gson")
+            }
+        }
+
         val builderMethod = type.addMethod("builder", AstModifier.STATIC)
                                 .setType("Builder")
 
@@ -217,51 +230,83 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
             //set defaults
             // ints
-            it.getAnnotation(DefaultInt::class.java)?.let {
+            it.getAnnotation(DefaultInt::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument(IntegerLiteralExpr(it.value))
+                        .addArgument(IntegerLiteralExpr(def.value))
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument(IntegerLiteralExpr(def.value))
+                }
             }
 
             // longs
-            it.getAnnotation(DefaultLong::class.java)?.let {
+            it.getAnnotation(DefaultLong::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument(LongLiteralExpr(it.value))
+                        .addArgument(LongLiteralExpr(def.value))
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument(LongLiteralExpr(def.value))
+                }
             }
 
             // short
-            it.getAnnotation(DefaultShort::class.java)?.let {
+            it.getAnnotation(DefaultShort::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument("(short)"+it.value.toString())
+                        .addArgument("(short)"+def.value.toString())
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument("(short)"+def.value.toString())
+                }
             }
 
             // Byte
-            it.getAnnotation(DefaultByte::class.java)?.let {
+            it.getAnnotation(DefaultByte::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument("(byte)"+it.value.toString())
+                        .addArgument("(byte)"+def.value.toString())
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument("(byte)"+def.value.toString())
+                }
             }
 
             // Boolean
-            it.getAnnotation(DefaultBool::class.java)?.let {
+            it.getAnnotation(DefaultBool::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument(BooleanLiteralExpr(it.value))
+                        .addArgument(BooleanLiteralExpr(def.value))
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument(BooleanLiteralExpr(def.value))
+                }
             }
 
             // Double
-            it.getAnnotation(DefaultDouble::class.java)?.let {
+            it.getAnnotation(DefaultDouble::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument(DoubleLiteralExpr(it.value))
+                        .addArgument(DoubleLiteralExpr(def.value))
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument(DoubleLiteralExpr(def.value))
+                }
             }
 
             // Float
-            it.getAnnotation(DefaultFloat::class.java)?.let {
+            it.getAnnotation(DefaultFloat::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument(it.value.toString()+"f")
+                        .addArgument(def.value.toString()+"f")
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument(def.value.toString()+"f")
+                }
             }
 
             //Strings
-            it.getAnnotation(DefaultString::class.java)?.let {
+            it.getAnnotation(DefaultString::class.java)?.let { def ->
                 builderCall = MethodCallExpr(builderCall, propertyName)
-                        .addArgument(StringLiteralExpr(it.value))
+                        .addArgument(StringLiteralExpr(def.value))
+                newTypeAdapterStmt = newTypeAdapterStmt?.let {
+                    MethodCallExpr(it, "setDefault" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))
+                            .addArgument(StringLiteralExpr(def.value))
+                }
             }
 
             //def values for primary types
@@ -308,6 +353,26 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         builderBody.addStatement(returnStm)
         builderMethod.setBody(builderBody)
 
+        // gson part 2
+        gson?.let {
+            val gsonTypeAdapter = type.addMethod("typeAdapter", AstModifier.PUBLIC, AstModifier.STATIC)
+                    .setType(TypeAdapter::class.java.canonicalName+"<"+className+">")
+                    .addParameter(com.google.gson.Gson::class.java, "gson")
+
+            val typeAdapterBody = BlockStmt()
+
+            if (newTypeAdapterStmt == null) {
+                newTypeAdapterStmt = ObjectCreationExpr()
+                        .setType("AutoValue_$className.GsonTypeAdapter")
+                        .addArgument("gson")
+            }
+
+            val typeAdapterReturn = ReturnStmt(newTypeAdapterStmt)
+
+            typeAdapterBody.addStatement(typeAdapterReturn)
+            gsonTypeAdapter.setBody(typeAdapterBody)
+        }
+
         // Add build method
         builderType.addMethod("build", AstModifier.PUBLIC, AstModifier.ABSTRACT)
                 .setType(className)
@@ -317,24 +382,6 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         type.addMethod("toBuilder", AstModifier.PUBLIC, AstModifier.ABSTRACT)
                 .setType("Builder")
                 .removeBody()
-
-        // add gson adapter
-        factoryElement.annotationMirrors
-                .union(creationMethod.annotationMirrors)
-                .find { it.toString().contains("Gson") }?.let {
-            val gsonTypeAdapter = type.addMethod("typeAdapter", AstModifier.PUBLIC, AstModifier.STATIC)
-                    .setType(TypeAdapter::class.java.canonicalName+"<"+className+">")
-                    .addParameter(com.google.gson.Gson::class.java, "gson")
-
-            val typeAdapterBody = BlockStmt()
-            val newTypeAdapterStmt = ObjectCreationExpr()
-                    .setType("AutoValue_$className.GsonTypeAdapter")
-                    .addArgument("gson")
-
-            val typeAdapterReturn = ReturnStmt(newTypeAdapterStmt)
-            typeAdapterBody.addStatement(typeAdapterReturn)
-            gsonTypeAdapter.setBody(typeAdapterBody)
-        }
 
         writer?.run {
             write(cu.toString())
