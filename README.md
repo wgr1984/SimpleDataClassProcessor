@@ -220,9 +220,7 @@ and use ```@Gson(true)``` instead of the pure annotation.
 ```Java
 @Gson(true) abstract Void dataObject1(@DefaultString(test) String val1, int number, @DefaultInt(3) int number2);
 ```
-<br />
-<br />
-<br />
+
 Todo:
 - [x] added named annotation (Gson)
 - [ ] Publish to jcenter
