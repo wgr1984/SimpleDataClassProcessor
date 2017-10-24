@@ -184,8 +184,20 @@ Gson gson = new GsonBuilder().registerTypeAdapterFactory(DataFactoryTypeAdapterF
 String json = gson.toJson(o3);
 DataObject3 o3New = gson.fromJson(json, DataObject3.class);
 ```
-
+Of course it possible to name attributes differently inside the
+consumed json and the generated data class:
+```Java
+abstract @Gson Void simpleObjectNamed(
+            @Named("value_1") int value1,
+            @Named("value_2") String value2,
+            @Named("value_3") List<String> value3);
+```
+This will add internally the well known ```@SerializedName``` annotation.
+<br />
+<br />
+<br />
 Todo:
+- [x] added named annotation (Gson)
 - [ ] Publish to jcenter
 - [x] Provide samples and doc
 - [ ] support auto-value-gson default values
