@@ -49,5 +49,5 @@ dependencies {
     compileOnly 'com.google.code.gson:gson:2.8.2'
 }
 
-sourceCompatibility = "1.6"
-targetCompatibility = "1.6"
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
