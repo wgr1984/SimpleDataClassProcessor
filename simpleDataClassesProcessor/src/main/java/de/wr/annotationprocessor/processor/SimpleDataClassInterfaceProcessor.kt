@@ -109,7 +109,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
     private fun generateAutoValueGsonFactory(typeElement: TypeElement) {
         try {
             val fileName = typeElement.simpleName.substring(0, 1).toUpperCase() + typeElement.simpleName.substring(1) + "TypeAdapterFactory"
-            val source = processingEnv.filer.createSourceFile(fileName)
+            val source = processingEnv.filer.createSourceFile("${getPackageName(typeElement)}.$fileName")
 
             val writer = BufferedWriter(source.openWriter())
 
