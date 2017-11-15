@@ -9,36 +9,24 @@ import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
 import com.google.gson.annotations.SerializedName
 import com.ryanharter.auto.value.gson.GsonTypeAdapterFactory
+import com.sun.source.tree.ImportTree
+import com.sun.source.util.Trees
 import de.wr.libsimpledataclasses.*
-import de.wr.libsimpledataclasses.Named
-
-import javax.annotation.processing.AbstractProcessor
-import javax.annotation.processing.Filer
-import javax.annotation.processing.Messager
-import javax.annotation.processing.ProcessingEnvironment
-import javax.annotation.processing.RoundEnvironment
+import java.io.BufferedWriter
+import java.io.IOException
+import java.util.*
+import javax.annotation.Generated
+import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.Modifier
-import javax.lang.model.element.TypeElement
+import javax.lang.model.SourceVersion.latestSupported
+import javax.lang.model.element.*
+import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
-
-import java.io.*
-import java.util.*
-import javax.annotation.Generated
-
-import javax.lang.model.SourceVersion.latestSupported
-import javax.lang.model.type.TypeKind
-
 import com.github.javaparser.ast.Modifier as AstModifier
 
 class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
-
-    private val methodsForClass = Hashtable<TypeElement, List<ExecutableElement>>()
 
     private lateinit var objectType: String
     private lateinit var typeUtils: Types
@@ -52,26 +40,28 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes() = supportedAnnotations
 
+    private lateinit var tree: Trees
+
     @Synchronized override fun init(processingEnv: ProcessingEnvironment) {
         super.init(processingEnv)
         typeUtils = processingEnv.typeUtils
         elementUtils = processingEnv.elementUtils
         filer = processingEnv.filer
         messager = processingEnv.messager
+        tree = Trees.instance(processingEnv)
     }
 
-//    private fun addMethodToClass(clazz: TypeElement, method: ExecutableElement) {
-//        val executableElements = methodsForClass[clazz]
-//        if (executableElements != null) {
-//            for (executableElement in executableElements) {
-//                System.err.println(executableElement)
-//            }
-//        }
-//    }
+
+    private lateinit var imports: List<ImportTree>
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
 
         val elementsAnnotatedWith = roundEnv.getElementsAnnotatedWith(DataClassFactory::class.java)
+
+        imports = roundEnv.getRootElements().flatMap {
+            val path = tree.getPath(it)
+            path.getCompilationUnit().imports
+        }
 
         elementsAnnotatedWith.forEach { element ->
             if (element.kind != ElementKind.CLASS || !element.modifiers.contains(Modifier.ABSTRACT)) {
@@ -113,7 +103,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
             val writer = BufferedWriter(source.openWriter())
 
-            val cu = CompilationUnit();
+            val cu = CompilationUnit()
             // set the package
             cu.setPackageDeclaration(getPackageName(typeElement));
 
@@ -215,14 +205,22 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             val propertyName = it.simpleName.toString()
             // create a method
 
-            // Create Getter
+            // Workaround not found types
+            val import = imports.find { tree -> tree.toString().contains(it.asType().toString()) }
+
+            val propertyType = import?.let { i ->
+                info(it, "Import found: %s %n", i.toString())
+                i.toString().replace("import ", "").replace(";", "")
+            } ?: it.asType().toString()
+
+            // Create Getter"
             val propertyGetter = type.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
-                    .setType(it.asType().toString())
+                    .setType(propertyType)
                     .removeBody()
 
             // Create Setter
             val propertySetter = builderType.addMethod(propertyName, AstModifier.PUBLIC, AstModifier.ABSTRACT)
-                    .addParameter(it.asType().toString(), propertyName)
+                    .addParameter(propertyType, propertyName)
                     .setType("Builder")
                     .removeBody()
 

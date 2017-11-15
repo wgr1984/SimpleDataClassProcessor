@@ -66,6 +66,7 @@ dependencies {
     compileOnly group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     compileOnly 'com.ryanharter.auto.value:auto-value-gson-annotations:0.6.0'
     compile 'com.google.code.gson:gson:2.8.2'
+    compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
 
 sourceCompatibility = "1.8"
