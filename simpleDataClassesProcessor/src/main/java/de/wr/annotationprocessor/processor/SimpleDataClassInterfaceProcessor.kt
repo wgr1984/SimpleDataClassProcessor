@@ -173,7 +173,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         cu.setPackageDeclaration(packageName);
 
         // create the type declaration
-        val type = cu.addClass(className, AstModifier.ABSTRACT)
+        val type = cu.addClass(className, AstModifier.PUBLIC, AstModifier.ABSTRACT)
                     .addAnnotation(AutoValue::class.java)
         factoryElement.annotationMirrors
                 .union(creationMethod.annotationMirrors)
@@ -182,7 +182,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         }
         type.tryAddImportToParentCompilationUnit(AutoValue.Builder::class.java)
 
-        val builderType = cuBuilder.addClass("Builder", AstModifier.ABSTRACT, AstModifier.STATIC)
+        val builderType = cuBuilder.addClass("Builder", AstModifier.PUBLIC, AstModifier.ABSTRACT, AstModifier.STATIC)
                             .addAnnotation(AutoValue.Builder::class.java.canonicalName)
         type.addMember(builderType)
 
@@ -199,7 +199,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             }
         }
 
-        val builderMethod = type.addMethod("builder", AstModifier.STATIC)
+        val builderMethod = type.addMethod("builder", AstModifier.PUBLIC, AstModifier.STATIC)
                                 .setType("Builder")
 
         val builderBody = BlockStmt()
