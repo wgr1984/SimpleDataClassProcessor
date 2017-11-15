@@ -142,7 +142,7 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
 
         try {
             val fileName = it.simpleName.substring(0, 1).toUpperCase() + it.simpleName.substring(1)
-            val source = processingEnv.filer.createSourceFile(fileName)
+            val source = processingEnv.filer.createSourceFile("${getPackageName(typeElement)}.$fileName")
 
             val writer = BufferedWriter(source.openWriter())
 
@@ -185,7 +185,6 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
                 .find { it.toString().contains("Parcelable") }?.let {
             type.addImplementedType("android.os.Parcelable")
         }
-        type.tryAddImportToParentCompilationUnit(AutoValue.Builder::class.java)
 
         val builderType = cuBuilder.addClass("Builder", AstModifier.PUBLIC, AstModifier.ABSTRACT, AstModifier.STATIC)
                             .addAnnotation(AutoValue.Builder::class.java.canonicalName)
