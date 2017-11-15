@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /*
  * Created by wolfgangreithmeier on 17.04.17.
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface Parcelable {
 }
