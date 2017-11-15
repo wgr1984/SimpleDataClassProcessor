@@ -52,15 +52,15 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
     }
 
 
-    private lateinit var imports: List<ImportTree>
+    private lateinit var imports: List<String>
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
 
         val elementsAnnotatedWith = roundEnv.getElementsAnnotatedWith(DataClassFactory::class.java)
 
-        imports = roundEnv.getRootElements().flatMap {
-            val path = tree.getPath(it)
-            path.getCompilationUnit().imports
+        imports = roundEnv.getRootElements().flatMap { elem ->
+            val path = tree.getPath(elem)
+            path.compilationUnit.imports.map { it.toString().replace("import ", "").replace(";", "") }
         }
 
         elementsAnnotatedWith.forEach { element ->
@@ -206,11 +206,11 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             // create a method
 
             // Workaround not found types
-            val import = imports.find { tree -> tree.toString().contains(it.asType().toString()) }
+            val import = imports.find { tree -> tree.contains(it.asType().toString()) }
 
             val propertyType = import?.let { i ->
                 info(it, "Import found: %s %n", i.toString())
-                i.toString().replace("import ", "").replace(";", "")
+                i
             } ?: it.asType().toString()
 
             // Create Getter"

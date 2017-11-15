@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-//        mavenLocal()
+        mavenLocal()
         jcenter()
         mavenCentral()
         maven { url "https://jitpack.io" }
@@ -43,7 +43,7 @@ android {
 
 
 repositories {
-//    mavenLocal()
+    mavenLocal()
     maven { url "https://dl.bintray.com/wgr1984/SimpleDataClasses"}
 }
 
@@ -70,10 +70,10 @@ dependencies {
 
 
     provided group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
-    provided project(path: ':libSimpleDataClasses')
-    annotationProcessor project(":simpleDataClassesProcessor")
-//    annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.1"
-//    provided "de.wr.simpledataclasses:libSimpleDataClasses:0.1"
+//    provided project(path: ':libSimpleDataClasses')
+//    annotationProcessor project(":simpleDataClassesProcessor")
+    annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.7"
+    provided "de.wr.simpledataclasses:libSimpleDataClasses:0.7"
 }
 
 //android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true
