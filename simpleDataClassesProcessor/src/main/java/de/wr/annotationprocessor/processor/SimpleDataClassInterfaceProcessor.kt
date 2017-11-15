@@ -29,6 +29,7 @@ import javax.tools.Diagnostic
 
 import java.io.*
 import java.util.*
+import javax.annotation.Generated
 
 import javax.lang.model.SourceVersion.latestSupported
 import javax.lang.model.type.TypeKind
@@ -175,6 +176,10 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
         // create the type declaration
         val type = cu.addClass(className, AstModifier.PUBLIC, AstModifier.ABSTRACT)
                     .addAnnotation(AutoValue::class.java)
+
+        // add generated annotation
+        type.addAndGetAnnotation(Generated::class.java).addPair("value", "\"${SimpleDataClassInterfaceProcessor::class.java.canonicalName}\"")
+
         factoryElement.annotationMirrors
                 .union(creationMethod.annotationMirrors)
                 .find { it.toString().contains("Parcelable") }?.let {
