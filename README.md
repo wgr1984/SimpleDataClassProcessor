@@ -17,8 +17,8 @@ repositories {
 ```
 and the following two dependecies:
 ```Groovy
-annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.1"
-provided "de.wr.simpledataclasses:libSimpleDataClasses:0.1"
+annotationProcessor "de.wr.simpledataclasses:simpleDataClassesProcessor:0.2"
+provided "de.wr.simpledataclasses:libSimpleDataClasses:0.2"
 provided "com.google.auto.value:auto-value:1.5.2"
 annotationProcessor "com.google.auto.value:auto-value:1.5.2"
 ```
