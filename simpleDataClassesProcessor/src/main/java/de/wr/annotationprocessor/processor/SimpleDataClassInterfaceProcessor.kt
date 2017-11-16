@@ -12,6 +12,7 @@ import com.ryanharter.auto.value.gson.GsonTypeAdapterFactory
 import com.sun.source.tree.ImportTree
 import com.sun.source.util.Trees
 import de.wr.libsimpledataclasses.*
+import io.reactivex.rxkotlin.toObservable
 import java.io.BufferedWriter
 import java.io.IOException
 import java.util.*
@@ -52,16 +53,20 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
     }
 
 
-    private lateinit var imports: List<String>
+    private lateinit var imports: Map<String, String>
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
 
         val elementsAnnotatedWith = roundEnv.getElementsAnnotatedWith(DataClassFactory::class.java)
 
-        imports = roundEnv.getRootElements().flatMap { elem ->
+        imports = roundEnv.rootElements.toObservable().flatMap { elem ->
             val path = tree.getPath(elem)
-            path.compilationUnit.imports.map { it.toString().replace("import ", "").replace(";", "") }
-        }
+            path.compilationUnit.imports.toObservable().map {
+                val import = it.toString()
+                val length = "import ".length
+                import.substring(length, import.length - 2)
+            }
+        }.toMap { it.substring(it.lastIndexOf(".") + 1)}.blockingGet()
 
         elementsAnnotatedWith.forEach { element ->
             if (element.kind != ElementKind.CLASS || !element.modifiers.contains(Modifier.ABSTRACT)) {
@@ -74,8 +79,6 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             val typeElement = element as TypeElement
 
             objectType = typeElement.simpleName.toString()
-
-            val qualifiedName = typeElement.qualifiedName.toString()
 
             info(element, "The annotated element %s found", element)
 
@@ -206,10 +209,10 @@ class SimpleDataClassInterfaceProcessor : AbstractProcessor() {
             // create a method
 
             // Workaround not found types
-            val import = imports.find { tree -> tree.contains(it.asType().toString()) }
+            val import = imports[it.asType().toString()]
 
             val propertyType = import?.let { i ->
-                info(it, "Import found: %s %n", i.toString())
+                info(it, "Import found: %s %n", i)
                 i
             } ?: it.asType().toString()
 
