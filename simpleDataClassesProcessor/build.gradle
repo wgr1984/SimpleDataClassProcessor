@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'de.wr.simpledataclasses'
-version = '0.6'
+version = '0.7'
 
 publishing {
     publications {
@@ -39,9 +39,9 @@ bintray {
         labels = ['autovalue', 'annotation-processor', 'java', 'kotlin']
         publicDownloadNumbers = true
         version {
-            name = '0.6'
-            desc = 'Simple Data Class Processor ' + '0.6'
-            vcsTag = '0.6'
+            name = '0.7'
+            desc = 'Simple Data Class Processor ' + '0.7'
+            vcsTag = '0.7'
         }
     }
 }
@@ -66,6 +66,7 @@ dependencies {
     compileOnly group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     compileOnly 'com.ryanharter.auto.value:auto-value-gson-annotations:0.6.0'
     compile 'com.google.code.gson:gson:2.8.2'
+    compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
 
 sourceCompatibility = "1.8"
